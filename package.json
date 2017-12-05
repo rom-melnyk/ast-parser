@@ -1,0 +1,25 @@
+{
+  "name": "ast-parser",
+  "version": "1.0.0",
+  "description": "Parse the Abstract Syntax Tree (AST)",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node node_modules/.bin/mocha -c ./tests",
+    "test:win": "node node_modules/mocha/bin/_mocha -c ./tests"
+  },
+  "keywords": [
+    "parse",
+    "parser",
+    "abstract",
+    "sysntax",
+    "tree",
+    "ast",
+    "language",
+    "text"
+  ],
+  "author": "Roman Melnyk <email.rom.melnyk@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^4.0.1"
+  }
+}
