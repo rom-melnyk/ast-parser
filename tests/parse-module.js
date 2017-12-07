@@ -1,12 +1,13 @@
 const assert = require('assert');
-const parse = require('../src/index');
+const { parse, buildTree } = require('../src/index');
 
 
-describe('parse-argx module', () => {
-    it('should export a function', () => {
+describe('ast-parse module', () => {
+    it('should export parse(){}', () => {
         assert.ok(typeof parse === 'function');
     });
-    it('should not fail without params', () => {
-        assert.ok(typeof parse(), 'object');
+
+    it('should export buildTree(){}', () => {
+        assert.ok(typeof buildTree === 'function');
     });
 });
