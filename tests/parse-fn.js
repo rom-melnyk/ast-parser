@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { parse } = require('../src/index');
+const { parse } = require('../src/parse');
 const { TYPES } = require('../src/nodes/abstract-node');
 
 
