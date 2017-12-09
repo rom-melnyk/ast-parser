@@ -8,7 +8,7 @@ class OperatorMultiply extends AbstractBlockNode {
     }
 
 
-    static get mask() { return /^\*|mul|x$/i }
+    static get mask() { return /^(\*|mul|x)$/i }
 
 
     static interprete(content) {

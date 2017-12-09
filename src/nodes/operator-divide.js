@@ -8,7 +8,7 @@ class OperatorDivide extends AbstractBlockNode {
     }
 
 
-    static get mask() { return /^\/|div$/i }
+    static get mask() { return /^(\/|div)$/i }
 
 
     static interprete(content) {

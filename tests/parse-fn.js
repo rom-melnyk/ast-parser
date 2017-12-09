@@ -2,17 +2,27 @@ const assert = require('assert');
 const { parse } = require('../src/parse');
 const { TYPES } = require('../src/nodes/abstract-node');
 
-
+const { Number, Operators } = TYPES;
 const EXPECTED = {
     NumsAndAdd: {
-        input: '1+2+3+4',
-        types: [ TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number ],
-        contents: [ '1', '+', '2', '+', '3', '+', '4' ]
+        input: '1+22+33304+4',
+        types: [ Number, Operators.Add, Number, Operators.Add, Number, Operators.Add, Number ],
+        contents: [ '1', '+', '22', '+', '33304', '+', '4' ]
     },
     WithWhitespace: {
-        input: ' 1 +2  + 3 \n  + \n\n4 ',
-        types: [ TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number ],
-        contents: [ '1', '+', '2', '+', '3', '+', '4' ]
+        input: ' 1 +22  + 37 \n  + \n\n444 ',
+        types: [ Number, Operators.Add, Number, Operators.Add, Number, Operators.Add, Number ],
+        contents: [ '1', '+', '22', '+', '37', '+', '444' ]
+    },
+    NumsAndAddSubMulDiv: {
+        input: '10 + 22 - 33 * 4 / 5',
+        types: [ Number, Operators.Add, Number, Operators.Subtract, Number, Operators.Multiply, Number, Operators.Divide, Number ],
+        contents: [ '10', '+', '22', '-', '33', '*', '4', '/', '5' ]
+    },
+    NumsAndAddSubMulDivLetters: {
+        input: '10 plus 22 minus 33 mul 4 div 5 x 3',
+        types: [ Number, Operators.Add, Number, Operators.Subtract, Number, Operators.Multiply, Number, Operators.Divide, Number, Operators.Multiply, Number ],
+        contents: [ '10', '+', '22', '-', '33', '*', '4', '/', '5', '*', '3' ]
     },
 };
 

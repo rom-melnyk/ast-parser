@@ -1,9 +1,12 @@
 const DecimalNumber = require('./nodes/decimal-number');
 const OperatorAdd = require('./nodes/operator-add');
+const OperatorSubtract = require('./nodes/operator-subtract');
+const OperatorMultiply = require('./nodes/operator-multiply');
+const OperatorDivide = require('./nodes/operator-divide');
 
 
 const WHITESPACE = /\s|\n/;
-const KNOWN_NODE_TYPES = [ DecimalNumber, OperatorAdd ];
+const KNOWN_NODE_TYPES = [ DecimalNumber, OperatorAdd, OperatorSubtract, OperatorMultiply, OperatorDivide ];
 
 const SURROUNDING_LENGTH = 10; // when exposing an error, how many chars around to show
 
@@ -67,7 +70,6 @@ function parse(input = '', { greedy = true, ignoreErrors = false } = {}) {
     const parsed = [];
 
     let i = -1;
-    let node;
     let recognizedText = '';
     while (++i < input.length) {
         let Ctor;
@@ -78,8 +80,9 @@ function parse(input = '', { greedy = true, ignoreErrors = false } = {}) {
 
         if (greedy) {
             // try to parse as much as possible
-            ({ i, recognizedText, Ctor } = parseGreedy(input, i, recognizedText, Ctor));
+            ({ i, recognizedText, Ctor } = parseGreedy(input, i, recognizedText));
         } else {
+            const node = parsed[ parsed.length - 1 ];
             if (canAddCharToNode(char, node)) {
                 node.content += char;
                 continue;
@@ -93,13 +96,11 @@ function parse(input = '', { greedy = true, ignoreErrors = false } = {}) {
             continue;
         }
 
-        node = new Ctor(greedy ? recognizedText : char);
+        const node = new Ctor(greedy ? recognizedText : char);
         parsed.push(node);
         recognizedText = '';
     }
-    node = null; // cleanup
 
-    // console.log(parsed);
     return parsed;
 }
 
