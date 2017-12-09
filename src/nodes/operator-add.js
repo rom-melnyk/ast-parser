@@ -8,7 +8,7 @@ class OperatorAdd extends AbstractBlockNode {
     }
 
 
-    static get mask() { return /^\+$/ }
+    static get mask() { return /^\+|plus$/i }
 
 
     static interprete(content) {

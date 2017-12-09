@@ -3,35 +3,40 @@ const { parse } = require('../src/parse');
 const { TYPES } = require('../src/nodes/abstract-node');
 
 
+const EXPECTED = {
+    NumsAndAdd: {
+        input: '1+2+3+4',
+        types: [ TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number ],
+        contents: [ '1', '+', '2', '+', '3', '+', '4' ]
+    },
+    WithWhitespace: {
+        input: ' 1 +2  + 3 \n  + \n\n4 ',
+        types: [ TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number, TYPES.Operators.Add, TYPES.Number ],
+        contents: [ '1', '+', '2', '+', '3', '+', '4' ]
+    },
+};
+
+const MODES = [ true, false ]; // greedy, ascetic
+
 describe('parse()', () => {
     it('should return an Array', () => {
         assert.ok(Array.isArray( parse() ));
     });
 
-    const NUMS_AND_ADD = '1+2+3+4';
-    it(`should parse "${NUMS_AND_ADD}"`, () => {
-        const parsed = parse(NUMS_AND_ADD);
-        assert.ok(parsed.length, 7);
-        assert.ok(parsed[0].type, TYPES.Number);
-        assert.ok(parsed[1].type, TYPES.Operators.Add);
-        assert.ok(parsed[2].type, TYPES.Number);
-        assert.ok(parsed[3].type, TYPES.Operators.Add);
-        assert.ok(parsed[4].type, TYPES.Number);
-        assert.ok(parsed[5].type, TYPES.Operators.Add);
-        assert.ok(parsed[6].type, TYPES.Number);
-    });
+    Object.keys(EXPECTED).forEach((key) => {
+        MODES.forEach((mode) => {
+            const expected = EXPECTED[key];
+            const { types, contents } = expected;
+            assert.equal(types.length, contents.length, `Bad EXPECTED.${key} designed: types and contents have different length`);
 
-    const WITH_WHITESPACE = ' 1 +2  + 3 \n  + \n\n4 ';
-    it(`should ignore whitespaces in "${WITH_WHITESPACE}"`, () => {
-        const parsed = parse(WITH_WHITESPACE);
-        assert.ok(parsed.length, 7);
-        assert.ok(parsed[0].type, TYPES.Number);
-        assert.ok(parsed[1].type, TYPES.Operators.Add);
-        assert.ok(parsed[2].type, TYPES.Number);
-        assert.ok(parsed[3].type, TYPES.Operators.Add);
-        assert.ok(parsed[4].type, TYPES.Number);
-        assert.ok(parsed[5].type, TYPES.Operators.Add);
-        assert.ok(parsed[6].type, TYPES.Number);
+            it(`should parse "${expected.input.replace(/\n/g, '\\n')}" in ${ mode ? 'greedy' : 'ascetic' } mode`, () => {
+                const parsed = parse(expected.input, { greedy: mode });
+                assert.equal(parsed.length, types.length);
+                parsed.forEach(({ type, content }, i) => {
+                    assert.equal(type, types[i], `Type mismatch @${i}`);
+                    assert.equal(content, contents[i], `Content mismatch @${i}`);
+                });
+            });
+        });
     });
-
 });
