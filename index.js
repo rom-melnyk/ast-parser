@@ -9,9 +9,6 @@ process.argv.slice(2).forEach((arg, idx, args) => {
         case arg === '-i':
             options.ignoreErrors = true;
             return;
-        case arg === '-a':
-            options.greedy = false;
-            return;
         case idx === args.length - 1:
             input = arg;
     }
@@ -24,9 +21,8 @@ if (input) {
     console.log(parse(input, options));
 } else {
     console.log(`
-usage: node index.js [-a] [-i] STRING
+usage: node index.js [-i] STRING
 
-  -a        ascetic mode (contrary to greedy, the default one)
   -i        ignore errors (contrary to throwing 'em, the default way)
   STRING    string to parse
 `);

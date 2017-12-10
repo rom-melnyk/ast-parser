@@ -8,7 +8,7 @@ class OperatorSubtract extends AbstractBlockNode {
     }
 
 
-    static get mask() { return /^(-|minus)$/i }
+    static get masks() { return [ /^-$/, 'minus' ]; }
 
 
     static interprete(content) {

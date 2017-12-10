@@ -24,9 +24,13 @@ const EXPECTED = {
         types: [ Number, Operators.Add, Number, Operators.Subtract, Number, Operators.Multiply, Number, Operators.Divide, Number, Operators.Multiply, Number ],
         contents: [ '10', '+', '22', '-', '33', '*', '4', '/', '5', '*', '3' ]
     },
+    NumsAndCaseInsensitiveLetters: {
+        input: '10 pLUs 22 MiNUS 33 mul 4 DIV 5 X 3',
+        types: [ Number, Operators.Add, Number, Operators.Subtract, Number, Operators.Multiply, Number, Operators.Divide, Number, Operators.Multiply, Number ],
+        contents: [ '10', '+', '22', '-', '33', '*', '4', '/', '5', '*', '3' ]
+    },
 };
 
-const MODES = [ true, false ]; // greedy, ascetic
 
 describe('parse()', () => {
     it('should return an Array', () => {
@@ -34,18 +38,16 @@ describe('parse()', () => {
     });
 
     Object.keys(EXPECTED).forEach((key) => {
-        MODES.forEach((mode) => {
-            const expected = EXPECTED[key];
-            const { types, contents } = expected;
-            assert.equal(types.length, contents.length, `Bad EXPECTED.${key} designed: types and contents have different length`);
+        const expected = EXPECTED[key];
+        const { types, contents } = expected;
+        assert.equal(types.length, contents.length, `Bad EXPECTED.${key} designed: types and contents have different length`);
 
-            it(`should parse "${expected.input.replace(/\n/g, '\\n')}" in ${ mode ? 'greedy' : 'ascetic' } mode`, () => {
-                const parsed = parse(expected.input, { greedy: mode });
-                assert.equal(parsed.length, types.length);
-                parsed.forEach(({ type, content }, i) => {
-                    assert.equal(type, types[i], `Type mismatch @${i}`);
-                    assert.equal(content, contents[i], `Content mismatch @${i}`);
-                });
+        it(`should parse ${key}: "${expected.input.replace(/\n/g, '\\n')}"`, () => {
+            const parsed = parse(expected.input);
+            assert.equal(parsed.length, types.length);
+            parsed.forEach(({ type, content }, i) => {
+                assert.equal(type, types[i], `Type mismatch @${i}`);
+                assert.equal(content, contents[i], `Content mismatch @${i}`);
             });
         });
     });

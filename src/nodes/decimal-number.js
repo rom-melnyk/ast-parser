@@ -7,7 +7,7 @@ class DecimalNumber extends AbstractNode {
     }
 
 
-    static get mask() { return /^[0-9]+$/ }
+    static get masks() { return /^[0-9]+$/ }
 
 
     static interprete(content) { return +content; }
