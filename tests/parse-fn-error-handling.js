@@ -1,13 +1,18 @@
 const assert = require('assert');
-const { parse } = require('../src/parse');
+const Parser = require('../src/parser');
+const { NodesConfig } = require('../src/nodes-config');
+
 
 
 describe('parse() error handling', () => {
+    const parser = new Parser({ nodes: NodesConfig });
     const WITH_UNKNOWN_SYMBOLS = '$1 + 2 + $ + asdf';
+
     it (`should throw SyntaxError`, () => {
-        assert.throws(() => parse(WITH_UNKNOWN_SYMBOLS), SyntaxError);
+        assert.throws(() => parser.parse(WITH_UNKNOWN_SYMBOLS), SyntaxError);
     });
     it (`should not throw error`, () => {
-        assert.ok(() => parse(WITH_UNKNOWN_SYMBOLS, { ignoreErrors: true }));
+        parser.ignoreErrors = true;
+        assert.ok(() => parser.parse(WITH_UNKNOWN_SYMBOLS));
     });
 });
