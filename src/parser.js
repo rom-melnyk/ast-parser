@@ -1,49 +1,63 @@
 const Node = require('./node');
 
 
-// const NEW_LINE = /\n/;
-const SURROUNDING_LENGTH = 10; // when exposing an error, how many chars around to show
-
-
-/**
- * Throw a SyntaxError or console.warn a message.
- */
-function handleError(ignoreErrors, { char, i, input }) {
-    const msg = `Unrecognizable char "${char}" at #${i + 1}`;
-    if (!ignoreErrors) {
-        throw new SyntaxError(msg);
-    }
-
-    const from = Math.max(0, i - SURROUNDING_LENGTH);
-    const to = Math.min(input.length, i + SURROUNDING_LENGTH + 1);
-    const surrounding = input.substr(from, to);
-    console.warn(`${msg}:`);
-    console.warn(`${ from === 0 ? '' : '...' }${surrounding}${ to === input.length ? '' : '...'}`);
-    console.warn(Array( from === 0 ? i : (SURROUNDING_LENGTH + 3 /*...*/) ).fill(' ').join('') + '^');
-}
+const NEW_LINE = /\n/;
 
 
 /**
  * Decides if given text matches any of given masks.
  * @param {string} text
- * @param {Array<string|RegExp>} masks
- * @param {boolean} isCaseSensitive
- * @return {boolean}
+ * @param {Array<{isCaseSensitive: boolean, masks: Array<string|RegExp>}>} nodes
+ * @return {boolean|Object}         `false` if nothing matched, `true` for partial match, `node` for full match
  */
-function matchAnyMask(text, masks, isCaseSensitive) {
-    if (!isCaseSensitive) {
-        text = text.toLowerCase();
+function matchAnyNode(text, nodes) {
+    let n = -1;
+    let matched = false;
+
+    while (++n < nodes.length) {
+        const node = nodes[n];
+        const { isCaseSensitive, masks } = node;
+        const preparedText = isCaseSensitive ? text : text.toLowerCase();
+
+        let m = -1;
+        while (++m < masks.length) {
+            const mask = masks[m];
+            if (mask.constructor === RegExp) {
+                const match = mask.exec(preparedText);
+                if (match) {
+                    if (match[0] === preparedText) {
+                        return node;
+                    } else {
+                        matched = true;
+                    }
+                }
+            } else if (mask === preparedText) { // typeof mask === 'string'
+                return node;
+            } else if (mask.length > preparedText.length && mask.substr(0, preparedText.length) === preparedText) {
+                matched = true;
+            }
+        }
     }
 
-    return masks.some(mask =>
-        mask.constructor === RegExp
-            ? mask.test(text)
-            : mask.length >= text.length // string
-                ? mask.substr(0, text.length) === text
-                : false
-    );
+    return matched;
 }
 
+
+function getCharAt(input, i, isBuffer) {
+    return input[ i ];
+    // TODO make me handling Buffer
+}
+
+
+function maybeHandleNewLine(char, charNo, lineNo) {
+    if (NEW_LINE.test(char)) {
+        charNo = 1;
+        lineNo++;
+    } else {
+        charNo++;
+    }
+    return { charNo, lineNo };
+}
 
 
 class Parser {
@@ -80,6 +94,7 @@ class Parser {
                 return { type, masks, isCaseSensitive, priority, interpret };
             })
             .filter(node => !!node);
+            // TODO remove nodes with duplicate types
     }
 
     /**
@@ -92,39 +107,54 @@ class Parser {
         const parsed = [];
 
         let i = -1;
-        let recognizedText = '';
-        // let lineNo = 1;
-        // let charNo = 1;
+        let lineNo = 1;
+        let charNo = 1;
+
         while (++i < input.length) {
-            let char = input[i];
-            if (!recognizedText && this.whitespace.test(char)) {
+            let char = getCharAt(input, i, isBuffer);
+
+            // ignore whitespace between nodes
+            if (this.whitespace.test(char)) {
+                ({ charNo, lineNo } = maybeHandleNewLine(char, charNo, lineNo));
                 continue;
             }
 
             // try to parse as much as possible
-            let matchingType;
-            let maybeNewType;
+            const found = { node: null, text: '', i: -1, charNo, lineNo };
+            let maybeNewMatch;
+            let text = '';
             do {
-                char = input[i];
-                const newText = recognizedText + char;
-                maybeNewType = this.nodes.find(({ masks, isCaseSensitive }) => matchAnyMask(newText, masks, isCaseSensitive));
-                if (maybeNewType) {
-                    matchingType = maybeNewType;
-                    recognizedText = newText;
-                    i++;
-                } else if (matchingType) {
-                    i--; // tried swallowing too much; revert to last successful position
-                }
-            } while (maybeNewType);
+                char = getCharAt(input, i, isBuffer);
+                text += char;
+                maybeNewMatch = matchAnyNode(text, this.nodes);
 
-            if (!matchingType) {
-                handleError(this.ignoreErrors, { char, i, input }); // this might throw an error
-                continue;
+                if (typeof maybeNewMatch === 'object') { // full matching node found
+                    Object.assign(found, { node: maybeNewMatch, text, i, charNo, lineNo });
+                }
+
+                ({ charNo, lineNo } = maybeHandleNewLine(char, charNo, lineNo));
+
+                if (maybeNewMatch /* node || true */) {
+                    i++;
+                } else if (!maybeNewMatch && found.node) {
+                    // tried swallowing too much; revert to last successful position
+                    ({ text, i, charNo, lineNo } = found);
+                }
+            } while (maybeNewMatch);
+
+            if (!found.node) {
+                const error = new SyntaxError(`Error parsing text "${text}" at ${found.lineNo}:${found.charNo}`);
+                if (this.ignoreErrors) {
+                    parsed.errors = parsed.errors || [];
+                    parsed.errors.push(error);
+                    continue;
+                } else {
+                    throw error;
+                }
             }
 
-            const node = new Node(matchingType.type, recognizedText, matchingType.interpret);
+            const node = new Node(found.node.type, found.text, found.node.interpret);
             parsed.push(node);
-            recognizedText = '';
         }
 
         return parsed;
