@@ -97,6 +97,7 @@ class Parser {
             // TODO remove nodes with duplicate types
     }
 
+
     /**
      *
      * @param {String|Buffer} input
@@ -158,6 +159,25 @@ class Parser {
         }
 
         return parsed;
+    }
+
+
+    complile(nodes = []) {
+        let root;
+        let current;
+
+        while (nodes.length) {
+            const node = nodes.shift();
+            if (!root) {
+                root = node;
+                current = node;
+                continue;
+            }
+
+            current.children.push(node);
+        }
+
+        return root;
     }
 }
 
