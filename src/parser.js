@@ -1,4 +1,4 @@
-const Node = require('./node');
+const Node = require('./nodes/terminal-node');
 
 
 const NEW_LINE = /\n/;

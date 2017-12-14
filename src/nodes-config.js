@@ -1,3 +1,6 @@
+const { BEHAVIORS } = require('./constants');
+
+
 const TYPES = {
     Text: 'text',
     Var: 'var',
@@ -16,32 +19,36 @@ const NodesConfig = [
         type: TYPES.Number,
         masks: /^[0-9]+$/,
         interpret({ content, children }) { return +content; },
-        priority: 1e6
+        priority: 10
     },
 
     {
         type: TYPES.Operators.Add,
         masks: [ '+', 'plus' ],
+        behavior: BEHAVIORS.Infix,
         interpret({ content, children }) { return children[0] + children[1]; },
-        priority: 20
+        priority: 100
     },
     {
         type: TYPES.Operators.Subtract,
         masks: [ '-', 'minus' ],
+        behavior: BEHAVIORS.Infix,
         interpret({ content, children }) { return children[0] - children[1]; },
-        priority: 20
+        priority: 100
     },
     {
         type: TYPES.Operators.Multiply,
         masks: [ '*', 'mul', 'x' ],
+        behavior: BEHAVIORS.Infix,
         interpret({ content, children }) { return children[0] * children[1]; },
-        priority: 10
+        priority: 1000
     },
     {
         type: TYPES.Operators.Divide,
         masks: [ '/', 'div' ],
+        behavior: BEHAVIORS.Infix,
         interpret({ content, children }) { return children[0] / children[1]; },
-        priority: 10
+        priority: 1000
     },
 ];
 

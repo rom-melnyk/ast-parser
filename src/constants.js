@@ -1,10 +1,17 @@
-// const OPERATOR_TYPES = {
-//
-// };
-//
-//
-// const NODE_TYPES = {
-//     LEAF:                                   0b00000001,
-//     TERMINAL:                               0b00000001, // alias to LEAF
-//
-// }
+const BEHAVIORS = {
+    // terminal leaves fo node tree
+    Leaf: 'leaf',
+    Terminal: 'leaf',
+
+    Infix: 'infix',
+    Prefix: 'prefix',
+    Postfix: 'postfix',
+
+    Block: {
+        Open: 'block-open',
+        Close: 'block-close',
+    }
+};
+
+
+module.exports = { BEHAVIORS };
