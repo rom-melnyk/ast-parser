@@ -1,9 +1,9 @@
-class Node {
-    constructor(type, content, interpret) {
+class TerminalNode {
+    constructor(type, content, { interpret } = {}) {
         this.type = type;
         this.content = content;
         this.parent = null;
-        this.interpret = interpret;
+        this.interpret = typeof interpret === 'function' ? interpret : ({ content, children }) => content;
     }
 
     /**
@@ -16,4 +16,4 @@ class Node {
 }
 
 
-module.exports = Node;
+module.exports = TerminalNode;

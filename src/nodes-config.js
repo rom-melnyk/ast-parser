@@ -1,4 +1,4 @@
-const { BEHAVIORS } = require('./constants');
+const { BEHAVIOR_TYPES, BEHAVIORS } = require('./behaviors');
 
 
 const TYPES = {
@@ -18,36 +18,36 @@ const NodesConfig = [
     {
         type: TYPES.Number,
         masks: /^[0-9]+$/,
-        interpret({ content, children }) { return +content; },
+        interpret() { return +this.content; },
         priority: 10
     },
 
     {
         type: TYPES.Operators.Add,
         masks: [ '+', 'plus' ],
-        behavior: BEHAVIORS.Infix,
-        interpret({ content, children }) { return children[0] + children[1]; },
+        behavior: BEHAVIOR_TYPES.Infix,
+        interpret() { return this.children[0].interpret() + this.children[1].interpret(); },
         priority: 100
     },
     {
         type: TYPES.Operators.Subtract,
         masks: [ '-', 'minus' ],
-        behavior: BEHAVIORS.Infix,
-        interpret({ content, children }) { return children[0] - children[1]; },
+        behavior: BEHAVIOR_TYPES.Infix,
+        interpret() { return this.children[0].interpret() - this.children[1].interpret(); },
         priority: 100
     },
     {
         type: TYPES.Operators.Multiply,
         masks: [ '*', 'mul', 'x' ],
-        behavior: BEHAVIORS.Infix,
-        interpret({ content, children }) { return children[0] * children[1]; },
+        behavior: BEHAVIOR_TYPES.Infix,
+        interpret() { return this.children[0].interpret() * this.children[1].interpret(); },
         priority: 1000
     },
     {
         type: TYPES.Operators.Divide,
         masks: [ '/', 'div' ],
-        behavior: BEHAVIORS.Infix,
-        interpret({ content, children }) { return children[0] / children[1]; },
+        behavior: BEHAVIOR_TYPES.Infix,
+        interpret() { return this.children[0].interpret() / this.children[1].interpret(); },
         priority: 1000
     },
 ];

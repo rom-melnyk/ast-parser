@@ -1,4 +1,4 @@
-const Node = require('./nodes/terminal-node');
+const { prepareNodeFromConfig, createNode } = require('./nodes/node-factory');
 
 
 const NEW_LINE = /\n/;
@@ -73,26 +73,7 @@ class Parser {
         this.ignoreErrors = ignoreErrors;
         this.whitespace = whitespace;
         this.nodes = nodes
-            .map(({ type, masks, isCaseSensitive, priority, interpret } = {}) => {
-                if (typeof type === 'undefined' || typeof masks === 'undefined') {
-                    console.warn('new Parser(): omit a node from configuration because it misses "type" or "masks"');
-                    return null;
-                }
-
-                isCaseSensitive = typeof isCaseSensitive === 'undefined'
-                    ? globalIsCaseSensitive
-                    : !!isCaseSensitive;
-                masks = (Array.isArray(masks) ? masks : [ masks ])
-                    .filter(mask => mask && (mask.constructor === RegExp) || (typeof mask === 'string'))
-                    .map(mask => typeof mask === 'string' && isCaseSensitive ? mask.toLowerCase() : mask);
-                if (!masks.length) {
-                    console.warn(`new Parser(): omit a node "${type}" from configuration because it has invalid "masks"`);
-                    return null;
-                }
-
-                interpret = typeof interpret === 'function' ? interpret : c => c;
-                return { type, masks, isCaseSensitive, priority, interpret };
-            })
+            .map((node) => prepareNodeFromConfig(node, globalIsCaseSensitive))
             .filter(node => !!node);
             // TODO remove nodes with duplicate types
     }
@@ -154,7 +135,7 @@ class Parser {
                 }
             }
 
-            const node = new Node(found.node.type, found.text, found.node.interpret);
+            const node = createNode(found.node, found.text);
             parsed.push(node);
         }
 
@@ -174,7 +155,28 @@ class Parser {
                 continue;
             }
 
-            current.children.push(node);
+            while (current !== root && current.isClosed()) {
+                current = current.parent;
+            }
+
+            if (current.isClosed()) {
+                if (node.children) {
+                    if (node.isChildAllowed(current)) {
+                        root = node;
+                        node.addChild(current);
+                        current = node;
+                        continue;
+                    }
+                    throw new EvalError('Compilation finished unexpectedly: an expression cannot be added as a child to a node');
+                }
+                throw new EvalError('Compilation finished unexpectedly: finished expression followed by terminal leaf');
+            } else {
+                if (current.isChildAllowed(node)) {
+                    current.addChild(node);
+                    continue;
+                }
+                throw new EvalError('Compilation finished unexpectedly: cannot add a node to existing structure');
+            }
         }
 
         return root;
