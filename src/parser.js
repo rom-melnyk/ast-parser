@@ -136,7 +136,7 @@ class Parser {
                 }
             }
 
-            const node = createNode(found.node, found.text);
+            const node = createNode(found.text, found.node);
             parsed.push(node);
         }
 
@@ -162,9 +162,9 @@ class Parser {
 
             if (current.isClosed()) {
                 if (node.children) {
-                    if (node.isChildAllowed(current)) {
-                        root = node;
+                    if (node.isChildValid(current)) {
                         node.addChild(current);
+                        root = node;
                         current = node;
                         continue;
                     }
@@ -172,7 +172,7 @@ class Parser {
                 }
                 throw new EvalError('Compilation finished unexpectedly: finished expression followed by terminal leaf');
             } else {
-                if (current.isChildAllowed(node)) {
+                if (current.isChildValid(node)) {
                     current.addChild(node);
                     continue;
                 }

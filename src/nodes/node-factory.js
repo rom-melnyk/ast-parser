@@ -1,5 +1,5 @@
 const TerminalNode = require('./terminal-node');
-const InteriorNode = require('./interior-node');
+const InfixOperator = require('./infix-operator');
 const { TYPES } = require('./constants');
 
 
@@ -58,7 +58,7 @@ function prepareNodeFromConfig(
 function createNode(content, nodeConfig) {
     switch (nodeConfig.type) {
         case TYPES.Infix:
-            return new InteriorNode(content, nodeConfig);
+            return new InfixOperator(content, nodeConfig);
         default:
     }
     return new TerminalNode(content, nodeConfig);

@@ -1,15 +1,7 @@
 const assert = require('assert');
 const Parser = require('../src/parser');
-const { TYPES } = require('../src/nodes/constants');
+const { nodes } = require('./nodes-test-config');
 
-
-const nodes = [
-    { type: TYPES.Terminal, masks: /^[0-9]+$/ },
-    { type: TYPES.Infix, masks: '+', priority: 10 },
-    { type: TYPES.Infix, masks: '-', priority: 10 },
-    { type: TYPES.Infix, masks: '*', priority: 100 },
-    { type: TYPES.Infix, masks: '/', priority: 100 },
-];
 
 const EXPECTED = {
     Nums_Add: {
