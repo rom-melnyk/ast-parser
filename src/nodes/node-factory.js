@@ -18,13 +18,8 @@ function prepareNodeFromConfig(
     } = {},
     globalIsCaseSensitive
 ) {
-    if (typeof masks === 'undefined') {
-        console.warn('new Parser(): omit a node configuration because it misses "classId" or "masks":', { classId, masks });
-        return null;
-    }
-
     if (AVAILABLE_TYPES.indexOf(type) === -1) {
-        console.warn(`new Parser(): omit a node configuration because of bad "type":`, type);
+        console.warn(`new Parser(): omit a node configuration because of invalid ".type":`, type);
         return null;
     }
 
@@ -37,7 +32,7 @@ function prepareNodeFromConfig(
         .filter(mask => mask && (mask.constructor === RegExp) || (typeof mask === 'string'))
         .map(mask => typeof mask === 'string' && isCaseSensitive ? mask.toLowerCase() : mask);
     if (!masks.length) {
-        console.warn(`new Parser(): omit a node "${classId}" configuration because of invalid "masks":`, originalMasks);
+        console.warn(`new Parser(): omit a node "${classId}" configuration because of invalid ".masks":`, originalMasks);
         return null;
     }
     originalMasks = null;
