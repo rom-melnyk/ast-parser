@@ -69,6 +69,7 @@ class Parser {
      */
     constructor({ isCaseSensitive = false, ignoreErrors = false, nodes = [], whitespace = /\s|\n/ } = {}) {
         let globalIsCaseSensitive = isCaseSensitive;
+        /** @tested-in tests/parser-module.js */
         this.isCaseSensitive = isCaseSensitive;
         this.ignoreErrors = ignoreErrors;
         this.whitespace = whitespace;

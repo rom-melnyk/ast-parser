@@ -1,7 +1,15 @@
 const assert = require('assert');
 const Parser = require('../src/parser');
-const { NodesConfig, TYPES } = require('../src/nodes-config');
+const { TYPES } = require('../src/nodes/constants');
 
+
+const nodes = [
+    { type: TYPES.Terminal, masks: /^[0-9]+$/ },
+    { type: TYPES.Infix, masks: '+', priority: 10 },
+    { type: TYPES.Infix, masks: '-', priority: 10 },
+    { type: TYPES.Infix, masks: '*', priority: 100 },
+    { type: TYPES.Infix, masks: '/', priority: 100 },
+];
 
 const EXPECTED = {
     Nums_Add: {
@@ -36,7 +44,7 @@ const EXPECTED = {
 
 
 describe('compile()', () => {
-    const parser = new Parser({ nodes: NodesConfig });
+    const parser = new Parser({ nodes });
 
     it('should return `undefined` being run without parameters', () => {
         assert.ok( !parser.complile() );

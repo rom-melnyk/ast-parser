@@ -1,11 +1,12 @@
 const assert = require('assert');
 const Parser = require('../src/parser');
+const { TYPES } = require('../src/nodes/constants');
 
 
 const nodes = [
-    { type: 'number', masks: /^[0-9]+$/ },
-    { type: '+', masks: [ '+', 'plus' ] },
-    { type: '++', masks: 'plussisimo' }
+    { type: TYPES.Terminal, masks: /^[0-9]+$/ },
+    { type: TYPES.Infix, masks: [ '+', 'plus' ] },
+    { type: TYPES.Infix, masks: 'plussisimo' }
 ];
 
 
