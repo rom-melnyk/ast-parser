@@ -1,10 +1,27 @@
 class TerminalNode {
-    constructor(type, content, { interpret } = {}) {
+    constructor(content, { classId, type, interpret, isClosed } = {}) {
+        this.classId = classId;
         this.type = type;
         this.content = content;
         this.parent = null;
-        this.interpret = typeof interpret === 'function' ? interpret : ({ content, children }) => content;
+
+        if (typeof interpret === 'function') {
+            this.interpret = interpret;
+        }
+        if (typeof isClosed === 'function') {
+            this.interpret = isClosed;
+        }
     }
+
+
+    /**
+     * How to interpret the node
+     * @return {*}
+     */
+    interpret() {
+        return this.content;
+    }
+
 
     /**
      * When the node is not a terminal leaf, defines if all the children are in or anything else should be appended to.

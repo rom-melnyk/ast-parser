@@ -1,13 +1,15 @@
 const TerminalNode = require('./terminal-node');
 
 
-class BlockNode extends TerminalNode {
-    constructor(type, content, { interpret, isChildAllowed, isClosed }) {
-        super(type, content, { interpret });
+class InteriorNode extends TerminalNode {
+    constructor(content, { classId, type, priority, interpret, isChildValid, isClosed }) {
+        super(content, { classId, type, interpret, isClosed });
         this.children = [];
+        this.priority = priority || 0;
 
-        this.isClosed = typeof isClosed === 'function' ? isClosed : () => this.children.length === 2;
-        this.isChildAllowed = typeof isChildAllowed === 'function' ? isChildAllowed : () => true;
+        if (typeof isChildValid === 'function') {
+            this.isChildValid = isChildValid;
+        }
     }
 
 
@@ -35,7 +37,17 @@ class BlockNode extends TerminalNode {
         }
         return undefined;
     }
+
+
+    /**
+     * Checks if given node is suitable as current node's child.
+     * @param {TerminalNode} childNode
+     * @return {boolean}
+     */
+    isChildValid(childNode) {
+        return true; // any child is valid
+    }
 }
 
 
-module.exports = BlockNode;
+module.exports = InteriorNode;

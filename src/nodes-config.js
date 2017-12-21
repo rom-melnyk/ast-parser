@@ -1,7 +1,7 @@
-const { BEHAVIOR_TYPES, BEHAVIORS } = require('./behaviors');
+const { TYPES } = require('./nodes/constants');
 
 
-const TYPES = {
+const CLASS_IDS = {
     Text: 'text',
     Var: 'var',
     Number: 'number',
@@ -16,41 +16,42 @@ const TYPES = {
 
 const NodesConfig = [
     {
-        type: TYPES.Number,
+        classId: CLASS_IDS.Number,
+        type: TYPES.Terminal,
         masks: /^[0-9]+$/,
         interpret() { return +this.content; },
         priority: 10
     },
 
     {
-        type: TYPES.Operators.Add,
+        classId: CLASS_IDS.Operators.Add,
+        type: TYPES.Infix,
         masks: [ '+', 'plus' ],
-        behavior: BEHAVIOR_TYPES.Infix,
         interpret() { return this.children[0].interpret() + this.children[1].interpret(); },
         priority: 100
     },
     {
-        type: TYPES.Operators.Subtract,
+        classId: CLASS_IDS.Operators.Subtract,
+        type: TYPES.Infix,
         masks: [ '-', 'minus' ],
-        behavior: BEHAVIOR_TYPES.Infix,
         interpret() { return this.children[0].interpret() - this.children[1].interpret(); },
         priority: 100
     },
     {
-        type: TYPES.Operators.Multiply,
+        classId: CLASS_IDS.Operators.Multiply,
+        type: TYPES.Infix,
         masks: [ '*', 'mul', 'x' ],
-        behavior: BEHAVIOR_TYPES.Infix,
         interpret() { return this.children[0].interpret() * this.children[1].interpret(); },
         priority: 1000
     },
     {
-        type: TYPES.Operators.Divide,
+        classId: CLASS_IDS.Operators.Divide,
+        type: TYPES.Infix,
         masks: [ '/', 'div' ],
-        behavior: BEHAVIOR_TYPES.Infix,
         interpret() { return this.children[0].interpret() / this.children[1].interpret(); },
         priority: 1000
     },
 ];
 
 
-module.exports = { TYPES, NodesConfig };
+module.exports = { CLASS_IDS, NodesConfig };

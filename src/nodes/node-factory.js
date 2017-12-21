@@ -1,20 +1,28 @@
 const TerminalNode = require('./terminal-node');
-const BlockNode = require('./block-node');
-const { BEHAVIOR_TYPES, BEHAVIORS } = require('../behaviors');
+const InteriorNode = require('./interior-node');
+const { TYPES } = require('./constants');
+
+
+const AVAILABLE_TYPES = Object.keys(TYPES).map(k => TYPES[k]);
 
 
 function prepareNodeFromConfig(
     {
-        type, masks, isCaseSensitive,
-        behavior,
-        priority,
+        classId, type,
+        masks, isCaseSensitive,
         interpret,
-        isClosed, isChildAllowed
+        priority,
+        isChildValid, isClosed
     } = {},
     globalIsCaseSensitive
 ) {
-    if (typeof type === 'undefined' || typeof masks === 'undefined') {
-        console.warn('new Parser(): omit a node from configuration because it misses "type" or "masks"');
+    if (typeof classId === 'undefined' || typeof masks === 'undefined') {
+        console.warn('new Parser(): omit a node configuration because it misses "classId" or "masks"', { classId, masks });
+        return null;
+    }
+
+    if (AVAILABLE_TYPES.indexOf(type) === -1) {
+        console.warn(`new Parser(): omit a node "${classId}" configuration because of bad "type"`, type);
         return null;
     }
 
@@ -25,22 +33,26 @@ function prepareNodeFromConfig(
         .filter(mask => mask && (mask.constructor === RegExp) || (typeof mask === 'string'))
         .map(mask => typeof mask === 'string' && isCaseSensitive ? mask.toLowerCase() : mask);
     if (!masks.length) {
-        console.warn(`new Parser(): omit a node "${type}" from configuration because it has invalid "masks"`);
+        console.warn(`new Parser(): omit a node "${classId}" configuration because of invalid "masks"`);
         return null;
     }
 
-    return { type, masks, isCaseSensitive, behavior, priority, interpret, isClosed, isChildAllowed };
+    return { classId, type, masks, isCaseSensitive, interpret, priority, isChildValid, isClosed };
 }
 
 
-function createNode({ type, interpret, behavior }, content) {
-    switch (behavior) {
-        case BEHAVIOR_TYPES.Infix:
-            const methods = Object.assign({ interpret }, BEHAVIORS[BEHAVIOR_TYPES.Infix]);
-            return new BlockNode(type, content, methods);
+/**
+ * @param {String} content
+ * @param {Object} nodeConfig
+ * @return {TerminalNode}
+ */
+function createNode(content, nodeConfig) {
+    switch (nodeConfig.type) {
+        case TYPES.Infix:
+            return new InteriorNode(content, nodeConfig);
         default:
     }
-    return new TerminalNode(type, content, { interpret });
+    return new TerminalNode(content, nodeConfig);
 }
 
 
