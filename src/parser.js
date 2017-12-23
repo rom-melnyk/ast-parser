@@ -1,4 +1,4 @@
-const { prepareNodeFromConfig, createNode } = require('./nodes/node-factory');
+const { prepareNodeFromConfig, getWhitespaceNode, getNotRecognizedNode, createNode } = require('./nodes/node-factory');
 
 
 const NEW_LINE = /\n/;
@@ -8,7 +8,7 @@ const NEW_LINE = /\n/;
  * Decides if given text matches any of given masks.
  * @param {string} text
  * @param {Array<{isCaseSensitive: boolean, masks: Array<string|RegExp>}>} nodes
- * @return {boolean|Object}         `false` if nothing matched, `true` for partial match, `node` for full match
+ * @return {boolean|Object}         `false` if nothing matched, `true` for partial match, node for full match
  */
 function matchAnyNode(text, nodes) {
     let n = -1;
@@ -27,8 +27,6 @@ function matchAnyNode(text, nodes) {
                 if (match) {
                     if (match[0] === preparedText) {
                         return node;
-                    } else {
-                        matched = true;
                     }
                 }
             } else if (mask === preparedText) { // typeof mask === 'string'
@@ -49,14 +47,14 @@ function getCharAt(input, i, isBuffer) {
 }
 
 
-function maybeHandleNewLine(char, charNo, lineNo) {
+function adjustCursor(line, column, char) {
     if (NEW_LINE.test(char)) {
-        charNo = 1;
-        lineNo++;
+        column = 1;
+        line++;
     } else {
-        charNo++;
+        column++;
     }
-    return { charNo, lineNo };
+    return { line, column };
 }
 
 
@@ -64,80 +62,85 @@ class Parser {
     /**
      * @param {boolean} [isCaseSensitive=false]
      * @param {boolean} [ignoreErrors=false]
-     * @param {Object[]} nodes                      nodes configuration
-     * @param {RegExp} [whitespace=/\s|\n/]         whitespace mask; it will be skipped unless belong to a node
+     * @param {RegExp} [whitespace=/\s+/]           whitespace mask; it is ignored unless treated specifically on parent node level
+     * @param {Array<Object>} nodes                 nodes configuration
      */
-    constructor({ isCaseSensitive = false, ignoreErrors = false, nodes = [], whitespace = /\s|\n/ } = {}) {
+    constructor({ isCaseSensitive = false, ignoreErrors = false, whitespace, nodes = [] } = {}) {
         let globalIsCaseSensitive = isCaseSensitive;
         /** @tested-in tests/parser-module.js */
         this.isCaseSensitive = isCaseSensitive;
         this.ignoreErrors = ignoreErrors;
-        this.whitespace = whitespace;
+
+        this.whitespaceNode = getWhitespaceNode(whitespace);
+        this.notRecognizedNode = getNotRecognizedNode();
+
         this.nodes = nodes
             .map((node) => prepareNodeFromConfig(node, globalIsCaseSensitive))
             .filter(node => !!node);
-            // TODO remove nodes with duplicate types
+        this.nodes.push( this.whitespaceNode );
     }
 
 
     /**
-     *
      * @param {String|Buffer} input
-     * @return {Object[]}
+     * @return {Array<Object<classId {String}, content>>}
      */
     parse(input = '') {
         const isBuffer = input && input.constructor === Buffer;
         const parsed = [];
 
         let i = -1;
-        let lineNo = 1;
-        let charNo = 1;
+        let line = 1;
+        let column = 1;
 
         while (++i < input.length) {
             let char = getCharAt(input, i, isBuffer);
-
-            // ignore whitespace between nodes
-            if (this.whitespace.test(char)) {
-                ({ charNo, lineNo } = maybeHandleNewLine(char, charNo, lineNo));
-                continue;
-            }
+            let text = '';
+            const found = { node: null, text, i, line, column };
+            let maybeNewMatch;
 
             // try to parse as much as possible
-            const found = { node: null, text: '', i: -1, charNo, lineNo };
-            let maybeNewMatch;
-            let text = '';
             do {
                 char = getCharAt(input, i, isBuffer);
                 text += char;
                 maybeNewMatch = matchAnyNode(text, this.nodes);
 
-                if (typeof maybeNewMatch === 'object') { // full matching node found
-                    Object.assign(found, { node: maybeNewMatch, text, i, charNo, lineNo });
+                if (maybeNewMatch) { // full or partial matching found
+                    Object.assign(
+                        found,
+                        { node: maybeNewMatch, text, i, line, column },
+                        found.node ? null : { position: { line, column, absolute: i } }
+                    );
                 }
 
-                ({ charNo, lineNo } = maybeHandleNewLine(char, charNo, lineNo));
+                ({ line, column } = adjustCursor(line, column, char));
 
-                if (maybeNewMatch /* node || true */) {
+                if (maybeNewMatch) { // full or partial matching found
                     i++;
-                } else if (!maybeNewMatch && found.node) {
+                } else if (found.node) {
                     // tried swallowing too much; revert to last successful position
-                    ({ text, i, charNo, lineNo } = found);
+                    ({ text, i, line, column } = found);
                 }
             } while (maybeNewMatch);
 
-            if (!found.node) {
-                const error = new SyntaxError(`Error parsing text "${text}" at ${found.lineNo}:${found.charNo}`);
-                if (this.ignoreErrors) {
-                    parsed.errors = parsed.errors || [];
-                    parsed.errors.push(error);
+
+            if (found.node === true) { // recognition was successful but then unexpected char appeared
+                found.node = this.notRecognizedNode;
+            } else if (!found.node) { // failed to recognize even first char
+                const previousNode = parsed[ parsed.length - 1 ];
+                if (previousNode && previousNode.classId === this.notRecognizedNode.classId) {
+                    previousNode.content += char;
                     continue;
                 } else {
-                    throw error;
+                    found.node = this.notRecognizedNode;
                 }
             }
 
-            const node = createNode(found.text, found.node);
-            parsed.push(node);
+            parsed.push({
+                classId: found.node.classId,
+                content: text,
+                position: found.position
+            });
         }
 
         return parsed;

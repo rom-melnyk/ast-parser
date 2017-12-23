@@ -4,8 +4,18 @@ const { TYPES } = require('./constants');
 
 
 const AVAILABLE_TYPES = Object.keys(TYPES).map(k => TYPES[k]);
+const NOT_RECOGNIZED_NODE = {
+    classId: '@@System@@___not-recognized',
+    type: TYPES.NotRecognized,
+    masks: /.*/, // the last hope if nothing else matches; a candidate for SyntaxError
+};
+const WHITESPACE_NODE = {
+    classId: '@@System@@___whitespace',
+    type: TYPES.Whitespace,
+    masks: /\s+/, // this might be overridden
+};
 
-let noClassIDCounter = 0;
+let noClassIdCounter = 0;
 
 
 function prepareNodeFromConfig(
@@ -32,16 +42,27 @@ function prepareNodeFromConfig(
         .filter(mask => mask && (mask.constructor === RegExp) || (typeof mask === 'string'))
         .map(mask => typeof mask === 'string' && isCaseSensitive ? mask.toLowerCase() : mask);
     if (!masks.length) {
-        console.warn(`new Parser(): omit a node "${classId}" configuration because of invalid ".masks":`, originalMasks);
+        console.warn(`new Parser(): omit a node configuration because of invalid ".masks":`, originalMasks);
         return null;
     }
     originalMasks = null;
 
     if (typeof classId === 'undefined') { // TODO check duplicates here as well
-        classId = `${type}___${masks[0].toString()}___${noClassIDCounter}`;
+        classId = `${type}___${masks[0].toString()}___${noClassIdCounter++}`;
     }
 
     return { classId, type, masks, isCaseSensitive, interpret, priority, isChildValid, isClosed };
+}
+
+
+function getWhitespaceNode(masks) {
+    const config = masks ? Object.assign({}, WHITESPACE_NODE, { masks }) : WHITESPACE_NODE;
+    return prepareNodeFromConfig(config);
+}
+
+
+function getNotRecognizedNode() {
+    return prepareNodeFromConfig(NOT_RECOGNIZED_NODE);
 }
 
 
@@ -60,4 +81,4 @@ function createNode(content, nodeConfig) {
 }
 
 
-module.exports = { prepareNodeFromConfig, createNode };
+module.exports = { prepareNodeFromConfig, getWhitespaceNode, getNotRecognizedNode, createNode };

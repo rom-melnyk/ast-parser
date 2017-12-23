@@ -4,8 +4,7 @@
   "description": "Parse the Abstract Syntax Tree (AST)",
   "main": "index.js",
   "scripts": {
-    "test": "node node_modules/.bin/mocha -c ./tests",
-    "test:win": "node node_modules/mocha/bin/_mocha -c ./tests",
+    "test": "node node_modules/mocha/bin/_mocha -c ./tests",
     "try": "node index.js"
   },
   "keywords": [

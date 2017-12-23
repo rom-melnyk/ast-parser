@@ -6,7 +6,10 @@ const TYPES = {
     Infix: 'infix',
     Postfix: 'postfix',
 
-    Block: 'block'
+    Block: 'block',
+
+    Whitespace: 'whitespace', // something to ignore unless treated specifically on the parent level
+    NotRecognized: 'not-recognized', // a candidate for SyntaxError
 };
 
 

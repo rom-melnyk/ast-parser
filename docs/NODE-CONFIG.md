@@ -46,7 +46,29 @@ All the node description must inherit from this one (must have properties and me
     *       }
     *   }
     */
-    interpret() { return this.content; }
+    interpret() { return this.content; },
+
+
+    /**
+    * @param {Number} priority
+    * Defines the priority of the operator among other ones. Think arithmetical operators for example:
+    * "+" and "-" have priority (for instance) 10 but "*" and "/" have priority (for instance) 100.
+    * Here is how priority influences "2 + 2 * 2" calculation:
+    *
+    *   Priority values:  (*) > (+)               (*) <= (+)
+    *                                                       
+    *   Calculation result:   6                       8     
+    *                                                       
+    *   Syntax tree:          +                       *     
+    *                        / \                     / \    
+    *                       *   2                   +   2   
+    *                      / \                     / \      
+    *                     2   2                   2   2     
+    *
+    * For the matter of convenience don't use adjacent numbers (e.g., 10 and 100 is better than 10 and 11
+    * because first option allows easy inserting something in the middle). Hello Basic :)
+    */
+    priority: 100,
 ```
 
 
@@ -55,7 +77,12 @@ All the node description must inherit from this one (must have properties and me
 
 Also known as _Leaf node._ Intended to be a terminal leaf of the syntax tree (no more children). It inherits the config from the `AbstractNode`.
 
-`type` should be one of `"leaf"` or `"terminal"`. `interpret()` should handle `this.content`. No extra properties needed.
+#### General properties
+
+- `type` should be one of `"leaf"` or `"terminal"`.
+- `interpret()` should handle `this.content`.
+- `priority` is ignored.
+- No extra properties needed.
 
 #### Example
 
@@ -74,11 +101,14 @@ Also known as _Leaf node._ Intended to be a terminal leaf of the syntax tree (no
 
 This node represents an operator that resides _between_ two of its operands (think "+", "-", "*", "/"). The infix node supports two operands: first preceding the operator and second following it. Both _operands_ will be compiled to operator's `.children`.
 
-`type` is `"infix"`. `interpret()` should handle `this.content` and `this.children` (the latter is `Array(2)`).
+#### General properties
+
+- `type` is `"infix"`.
+- `interpret()` should handle `this.content` and `this.children` (the latter is `Array(2)`).
+- `priority` matters (see the "2 + 2 * 2" example).
 
 #### Extra properties
 
-- `proirity {Number}`; the more number is the higher is the priority of the operator among other infix operators. See example below for realization details.
 - `isChildValid {Function(childNode)}` uses the node as context and returns boolean value defining whether the `childNode` might or might not be appended to current node. By default returns `true` (any child is valid).
 
 #### Example
@@ -100,20 +130,6 @@ This node represents an operator that resides _between_ two of its operands (thi
 }
 ```
 
-This ensures `2 + 2 * 2` to be **`6`** not **`8`.** In terms of AST graph it looks so:
-
-```
-Priority values:  (*) > (+)               (*) <= (+)
-                                                    
-Calculation result:   6                       8     
-                                                    
-Syntax tree:          +                       *     
-                     / \                     / \    
-                    *   2                   +   2   
-                   / \                     / \      
-                  2   2                   2   2     
-```
-
 
 
 ## Prefix, postfix Nodes
@@ -122,7 +138,11 @@ Reside in front of it's operand _(prefix node)_ or follow it's operand _(postfix
 
 Both prefix and postfix nodes support one operand (will be compiled to node's `.children`).
 
-`type` is `"prefix"` or `"postfix"` respectively. `interpret()` should handle `this.content` and `this.children` (the latter is `Array(1)`).
+#### Default properties
+
+- `type` is `"prefix"` or `"postfix"` respectively.
+- `interpret()` should handle `this.content` and `this.children` (the latter is `Array(1)`).
+- `priority` matters. For most programming languages both _prefix and postfix_ operators have higher priority than _infix_ ones.
 
 #### Extra properties
 
