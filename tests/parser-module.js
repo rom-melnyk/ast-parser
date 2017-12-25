@@ -1,7 +1,5 @@
 const assert = require('assert');
 const Parser = require('../src/parser');
-const { NodesConfig } = require('../src/nodes-config');
-
 
 
 describe('new Parser()', () => {
