@@ -1,4 +1,4 @@
-const { prepareNodeFromConfig, getWhitespaceNode, getNotRecognizedNode, createNode } = require('./nodes/node-factory');
+const { prepareNodesFromConfig, getWhitespaceNode, getNotRecognizedNode, createNode } = require('./nodes/node-factory');
 
 
 const NEW_LINE = /\n/;
@@ -74,10 +74,13 @@ class Parser {
         this.whitespaceNode = getWhitespaceNode(whitespace);
         this.notRecognizedNode = getNotRecognizedNode();
 
-        this.nodes = nodes
-            .map((node) => prepareNodeFromConfig(node, globalIsCaseSensitive))
-            .filter(node => !!node);
+        this.nodes = prepareNodesFromConfig(nodes, globalIsCaseSensitive);
         this.nodes.push( this.whitespaceNode );
+
+        this.nodesByClassId = this.nodes.reduce((acc, node) => {
+            acc[node.classId] = node;
+            return acc;
+        }, {});
     }
 
 
@@ -152,7 +155,8 @@ class Parser {
         let current;
 
         while (nodes.length) {
-            const node = nodes.shift();
+            const { classId, content } = nodes.shift();
+            const node = createNode(content, this.nodesByClassId[classId]);
             if (!root) {
                 root = node;
                 current = node;

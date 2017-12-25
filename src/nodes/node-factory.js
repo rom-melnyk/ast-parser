@@ -18,7 +18,27 @@ const WHITESPACE_NODE = {
 let noClassIdCounter = 0;
 
 
-function prepareNodeFromConfig(
+/**
+ * @param {Array<Object>} nodes
+ * @param {boolean} globalIsCaseSensitive
+ * @returns {Array<Object>}
+ */
+function prepareNodesFromConfig(nodes, globalIsCaseSensitive) {
+    const preparedNodes = nodes
+        .map((node) => prepareSingleNodeFromConfig(node, globalIsCaseSensitive))
+        .filter(node => !!node);
+
+    // TODO check duplicates here as well
+    // preparedNodes.forEach((node, i) => {
+    //     if (preparedNodes.lastIndexOf(node) >= i) {
+    //
+    //     }
+    // });
+    return preparedNodes;
+}
+
+
+function prepareSingleNodeFromConfig(
     {
         classId, type,
         masks, isCaseSensitive,
@@ -47,7 +67,7 @@ function prepareNodeFromConfig(
     }
     originalMasks = null;
 
-    if (typeof classId === 'undefined') { // TODO check duplicates here as well
+    if (typeof classId === 'undefined') {
         classId = `${type}___${masks[0].toString()}___${noClassIdCounter++}`;
     }
 
@@ -57,12 +77,12 @@ function prepareNodeFromConfig(
 
 function getWhitespaceNode(masks) {
     const config = masks ? Object.assign({}, WHITESPACE_NODE, { masks }) : WHITESPACE_NODE;
-    return prepareNodeFromConfig(config);
+    return prepareSingleNodeFromConfig(config);
 }
 
 
 function getNotRecognizedNode() {
-    return prepareNodeFromConfig(NOT_RECOGNIZED_NODE);
+    return prepareSingleNodeFromConfig(NOT_RECOGNIZED_NODE);
 }
 
 
@@ -81,4 +101,4 @@ function createNode(content, nodeConfig) {
 }
 
 
-module.exports = { prepareNodeFromConfig, getWhitespaceNode, getNotRecognizedNode, createNode };
+module.exports = { prepareNodesFromConfig, getWhitespaceNode, getNotRecognizedNode, createNode };
